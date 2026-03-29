@@ -114,7 +114,16 @@
         body.light-mode-theme .next-set-btn { border: 2px solid var(--accent); }
 
         /* 情報・集計 */
-        #memo-view { display: none; flex-direction: column; height: 100%; padding: 10px; box-sizing: border-box; background: var(--bg); overflow-y: auto; }
+        #memo-view { 
+            display: none; 
+            flex-direction: column; 
+            height: 100%; 
+            padding: 10px; 
+            box-sizing: border-box; 
+            background: var(--bg); 
+            color: var(--text); /* 文字色を強制的に指定 */
+            overflow-y: auto; 
+        }
         .stats-box { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 10px; border: 1px solid var(--border); flex-shrink: 0; }
         body.light-mode-theme .stats-box { background: #ffffff; }
         .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-weight: bold; font-size: 1rem; }
@@ -479,22 +488,78 @@
 
         // セット移動
         function goToNextSet() {
-            triggerFlash(); if (!confirm('次セットに進みますか？')) return;
-            const cur = appState.sets[appState.activeSetIdx]; const next = { red: "", green: "", blue: "", upper: "", lower: "" };
+            triggerFlash(); 
+            if (!confirm('次セットに進みますか？')) return;
+            const cur = appState.sets[appState.activeSetIdx]; 
+            const next = { red: "", green: "", blue: "", upper: "", lower: "" };
+            
             ['red', 'green', 'blue'].forEach(c => {
                 if (isLightOn(cur[c])) cur[c] += "]";
-                const txt = cur[c] || ""; if (!txt.trim()) return;
-                const info = getPointInfo(txt); const lines = txt.split('\n').filter(l => l.trim() !== ""); const lastLine = lines[lines.length - 1] || "";
+                const txt = cur[c] || ""; 
+                if (!txt.trim()) return;
+                
+                const info = getPointInfo(txt); 
+                const lines = txt.split('\n').filter(l => l.trim() !== ""); 
+                const lastLine = lines[lines.length - 1] || "";
+                
+                // 行が数字や閉じカッコで終わっていない（＝ポイントが浮いている）状態をチェック
                 const isFinished = lastLine.match(/[\d\)]$/) || circledNumbers.some(cn => lastLine.endsWith(cn));
-                if (info.pts > 0 && !info.isConsumed) { if (!isFinished) cur[c] += "(" + info.pts + ")\n"; if (c !== 'blue') next[c] = "(" + info.pts + ")→"; }
+                
+                if (info.pts > 0 && !info.isConsumed) { 
+                    // 今のセットの末尾にポイントを書き込んでから改行
+                    if (!isFinished) cur[c] += "(" + info.pts + ")\n"; 
+                    // 青以外は「→」で引き継ぎ
+                    if (c !== 'blue') next[c] = "(" + info.pts + ")→"; 
+                }
             });
-            appState.sets.push(next); appState.activeSetIdx = appState.sets.length - 1; updateUI();
+            appState.sets.push(next); 
+            appState.activeSetIdx = appState.sets.length - 1; 
+            updateUI();
             setTimeout(() => { const ta = document.getElementById('tabs'); if (ta) ta.scrollLeft = ta.scrollWidth; }, 100);
         }
 
         // 削除・コピー・リセット
         function handleTabLongPress(idx) { if (confirm(appState.sets.length > 1 ? `【${idx+1}】を削除しますか？` : `【${idx+1}】をリセットしますか？`)) { if (appState.sets.length > 1) { appState.sets.splice(idx, 1); appState.activeSetIdx = Math.max(0, appState.sets.length - 1); } else { appState.sets[0] = { red: "", green: "", blue: "", upper: "", lower: "" }; } updateUI(); } }
-        async function copyAllHistory() { const r = countSymbols('red'), g = countSymbols('green'), b = countSymbols('blue'); const bellProb = appState.bellCount > 0 && appState.totalGames > 0 ? `(1/${(appState.totalGames/appState.bellCount).toFixed(1)})` : ""; let text = `【集計】\n総G数：${appState.totalGames}G\n🔔${appState.bellCount} ${bellProb}\n🔴${r.text}\n🟢${g.text}\n🔵${b.text}\n\n`; text += appState.sets.map((s, i) => { let lines = [`【${i + 1}】`]; if (s.upper) lines.push(s.upper.trim() + "\n"); lines.push(`🔴${s.red.trim()}`); lines.push(`🟢${s.green.trim()}`); lines.push(`🔵${s.blue.trim()}`); if (s.lower) lines.push("\n" + s.lower.trim()); return lines.join('\n'); }).join('\n\n'); if(appState.freeMemo) text += `\n\n【メモ】\n${appState.freeMemo}`; await navigator.clipboard.writeText(text); alert("コピー完了"); }
+        async function copyAllHistory() {
+            const r = countSymbols('red'), g = countSymbols('green'), b = countSymbols('blue');
+            const bellProb = appState.bellCount > 0 && appState.totalGames > 0 ? `(1/${(appState.totalGames/appState.bellCount).toFixed(1)})` : "";
+            
+            // 【集計ヘッダー】
+            let text = `【集計】\n総G数：${appState.totalGames}G\n🔔${appState.bellCount} ${bellProb}\n🔴${r.text}\n🟢${g.text}\n🔵${b.text}\n\n`;
+            
+            // 【ポイント計算を付与するコピー専用の処理】
+            const processForCopy = (val) => {
+                if (!val) return "";
+                const trimmed = val.trim();
+                const info = getPointInfo(trimmed); // 現在のポイントを取得
+                const lines = trimmed.split('\n');
+                const lastLine = lines[lines.length - 1] || "";
+                
+                // すでに(pts)で終わっているか、確定記号があるかチェック
+                const isFinished = lastLine.match(/[\d\)]$/) || circledNumbers.some(cn => lastLine.endsWith(cn));
+                
+                // 確定していないポイントがある場合のみ、(pts)を後ろに添える
+                if (info.pts > 0 && !info.isConsumed && !isFinished) {
+                    return trimmed + `(${info.pts})`;
+                }
+                return trimmed;
+            };
+
+            text += appState.sets.map((s, i) => {
+                let lines = [`【${i + 1}】`];
+                if (s.upper) lines.push(s.upper.trim() + "\n");
+                lines.push(`🔴${processForCopy(s.red)}`);
+                lines.push(`🟢${processForCopy(s.green)}`);
+                lines.push(`🔵${processForCopy(s.blue)}`);
+                if (s.lower) lines.push("\n" + s.lower.trim());
+                return lines.join('\n');
+            }).join('\n\n');
+            
+            if(appState.freeMemo) text += `\n\n【メモ】\n${appState.freeMemo}`;
+            
+            await navigator.clipboard.writeText(text); 
+            alert("コピー完了"); 
+        }
         function clearData() { if (confirm('データをリセットしますか？')) { appState.activeSetIdx = 0; appState.sets = [{ red: "", green: "", blue: "", upper: "", lower: "" }]; appState.bellCount = 0; appState.totalGames = 0; appState.freeMemo = ""; updateUI(); } }
         function closeSettings(e) { if(e.target.id === 'settings-modal') toggleSettingsModal(); }
 
