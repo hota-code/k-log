@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-title" content="Slot History">
     <meta name="theme-color" content="#3f51b5">
     
-    <title>Slot History - Kabaneri Log ver.1.2.8</title>
+    <title>Slot History - Kabaneri Log ver.1.2.9</title>
     
     <style>
         /* --- カラー設定（1.2.2準拠） --- */
@@ -172,7 +172,7 @@
     <div id="settings-modal" onclick="closeSettings(event)">
         <div id="settings-content" onclick="event.stopPropagation()">
             <div class="settings-header">
-                <span>設定 <small style="font-weight:normal; opacity:0.8; margin-left:5px;">ver.1.2.8</small></span>
+                <span>設定 <small style="font-weight:normal; opacity:0.8; margin-left:5px;">ver.1.2.9</small></span>
                 <span style="cursor:pointer; font-size:1.5rem;" onclick="toggleSettingsModal()">×</span>
             </div>
             <div class="settings-body">
@@ -243,7 +243,7 @@
                 <button class="subtle-btn" onclick="toggleSettingsModal()">設定</button>
                 <button class="subtle-btn" onclick="clearData()">リセット</button>
             </div>
-            <span class="version-text">Kabaneri Log ver.1.2.8</span>
+            <span class="version-text">Kabaneri Log ver.1.2.9</span>
         </div>
     </div>
 
@@ -254,7 +254,22 @@
         const colorLabels = { red: '🔴', green: '🟢', blue: '🔵' };
 
         function getInitialState() { 
-            return { activeSetIdx: 0, activeColor: 'red', viewMode: 'history', subLayer: 'history', sets: [{ red: "", green: "", blue: "", upper: "", lower: "" }], bellCount: 0, totalGames: 0, freeMemo: "", buttonOrder: ['◯', '◎', '●', '☆', '★', '◇', '◆', '＊', '🔔', '発光'], colorOrder: ['red', 'green', 'blue'], flashEnabled: true, isLightMode: false, isSortMode: false, autoLightMode: true }; 
+            return { 
+                activeSetIdx: 0, 
+                activeColor: 'red', 
+                viewMode: 'history', 
+                subLayer: 'history', 
+                sets: [{ red: "", green: "", blue: "", upper: "", lower: "" }], 
+                bellCount: 0, 
+                totalGames: 0, 
+                freeMemo: "", 
+                buttonOrder: ['◯', '◎', '●', '☆', '★', '◇', '◆', '＊', '🔔', '発光'], 
+                colorOrder: ['red', 'green', 'blue'], 
+                isLightMode: false, 
+                flashEnabled: true, 
+                autoLightMode: true, 
+                isSortMode: false, 
+            }; 
         }
         
         // --- 読み込みエラーガード機能（Ver. 1.2.7） ---
@@ -278,12 +293,19 @@
             throw new Error("App execution stopped to protect data.");
         }
 
-        // バージョン同期
+        // バージョン同期（設定維持の心臓部）
         (function() {
             const latest = getInitialState();
+            // 新キーの補完
             Object.keys(latest).forEach(k => { if (appState[k] === undefined) appState[k] = latest[k]; });
+            // ボタン配置の同期
             appState.buttonOrder = appState.buttonOrder.filter(b => latest.buttonOrder.includes(b));
-            latest.buttonOrder.forEach((b, idx) => { if (!appState.buttonOrder.includes(b)) appState.buttonOrder.splice(idx, 0, b); });
+            latest.buttonOrder.forEach(b => { if (!appState.buttonOrder.includes(b)) appState.buttonOrder.push(b); });
+            // カラー配置の同期
+            appState.colorOrder = appState.colorOrder.filter(c => latest.colorOrder.includes(c));
+            latest.colorOrder.forEach(c => { if (!appState.colorOrder.includes(c)) appState.colorOrder.push(c); });
+
+            localStorage.setItem(KEY, JSON.stringify(appState));
         })();
 
         let isLongPress = false, tabTimer = null, sortTargetIdx = null;
@@ -339,17 +361,35 @@
             localStorage.setItem(KEY, JSON.stringify(appState));
         }
 
-        // 設定切り替え
-        function toggleTheme() { appState.isLightMode = document.getElementById('theme-toggle').checked; updateUI(); }
-        function toggleFlashSetting() { appState.flashEnabled = document.getElementById('flash-toggle').checked; updateUI(); }
-        function toggleAutoLightSetting() { appState.autoLightMode = document.getElementById('auto-light-toggle').checked; updateUI(); }
-        function toggleSettingsModal() { document.getElementById('settings-modal').style.display = (document.getElementById('settings-modal').style.display === 'flex') ? 'none' : 'flex'; }
+        // 設定の切り替え（保存処理付き）
+        function toggleTheme() { 
+            appState.isLightMode = document.getElementById('theme-toggle').checked; 
+            saveAndRefresh();
+        }
+        function toggleFlashSetting() { 
+            appState.flashEnabled = document.getElementById('flash-toggle').checked; 
+            saveAndRefresh();
+        }
+        function toggleAutoLightSetting() { 
+            appState.autoLightMode = document.getElementById('auto-light-toggle').checked; 
+            saveAndRefresh();
+        }
+
+        // 保存して画面を更新する共通処理
+        function saveAndRefresh() {
+            localStorage.setItem(KEY, JSON.stringify(appState));
+            updateUI();
+        }
         
         function toggleSortMode() { 
             appState.isSortMode = !appState.isSortMode; 
             sortTargetIdx = null; 
             document.getElementById('settings-modal').style.display = 'none'; 
             document.getElementById('sort-done-overlay').style.display = appState.isSortMode ? 'flex' : 'none'; 
+            // 【追加】完了時に保存する
+            if (!appState.isSortMode) {
+                localStorage.setItem(KEY, JSON.stringify(appState));
+            }
             updateUI(); 
         }
 
@@ -369,6 +409,11 @@
         function updateUI() {
             const isMemo = appState.viewMode === 'memo';
             document.body.className = (isMemo ? "memo-mode" : "history-mode") + (appState.isLightMode ? " light-mode-theme" : "");
+
+            // --- 【追加】設定画面のスイッチを現在のデータ（appState）に合わせる ---
+            document.getElementById('theme-toggle').checked = appState.isLightMode;
+            document.getElementById('flash-toggle').checked = appState.flashEnabled;
+            document.getElementById('auto-light-toggle').checked = appState.autoLightMode;
             
             const tabArea = document.getElementById('tabs');
             tabArea.innerHTML = appState.sets.map((_, i) => `
