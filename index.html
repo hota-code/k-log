@@ -361,6 +361,12 @@
             localStorage.setItem(KEY, JSON.stringify(appState));
         }
 
+        // 設定画面の開閉
+        function toggleSettingsModal() { 
+            const modal = document.getElementById('settings-modal');
+            modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex'; 
+        }
+
         // 設定の切り替え（保存処理付き）
         function toggleTheme() { 
             appState.isLightMode = document.getElementById('theme-toggle').checked; 
