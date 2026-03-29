@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Slot History">
+    <meta name="apple-mobile-web-app-title" content="カバネリログ">
     <meta name="theme-color" content="#3f51b5">
     
-    <title>Slot History - Kabaneri Log ver.1.2.9</title>
+    <title>Slot History - Kabaneri Log ver.1.2.10</title>
     
     <style>
         /* --- カラー設定（1.2.2準拠） --- */
@@ -67,7 +67,7 @@
         #tabs::-webkit-scrollbar { display: none; }
         .tab { padding: 0 12px; line-height: 45px; border-right: 1px solid var(--border); font-size: 0.9rem; color: #888; flex-shrink: 0; cursor: pointer; text-align: center; min-width: 50px; position: relative; }
         .tab.active { background: var(--accent); color: #fff; font-weight: bold; border-bottom: 3px solid #fff; }
-        .tab-memo { margin-left: auto; border-left: 2px solid var(--border); background: var(--header-bg); position: sticky; right: 0; min-width: 65px; padding-top: env(safe-area-inset-top);}
+        .tab-memo { margin-left: auto; border-left: 2px solid var(--border); background: var(--header-bg); position: sticky; right: 0; min-width: 65px; }
 
         /* 上部表示エリア */
         #display-container { flex: 1; display: flex; flex-direction: column; background: var(--history-bg); overflow: hidden; border-bottom: 1px solid var(--border); }
@@ -172,7 +172,7 @@
     <div id="settings-modal" onclick="closeSettings(event)">
         <div id="settings-content" onclick="event.stopPropagation()">
             <div class="settings-header">
-                <span>設定 <small style="font-weight:normal; opacity:0.8; margin-left:5px;">ver.1.2.9</small></span>
+                <span>設定 <small style="font-weight:normal; opacity:0.8; margin-left:5px;">ver.1.2.10</small></span>
                 <span style="cursor:pointer; font-size:1.5rem;" onclick="toggleSettingsModal()">×</span>
             </div>
             <div class="settings-body">
@@ -243,7 +243,7 @@
                 <button class="subtle-btn" onclick="toggleSettingsModal()">設定</button>
                 <button class="subtle-btn" onclick="clearData()">リセット</button>
             </div>
-            <span class="version-text">Kabaneri Log ver.1.2.9</span>
+            <span class="version-text">Kabaneri Log ver.1.2.10</span>
         </div>
     </div>
 
@@ -581,19 +581,23 @@
             // 【ポイント計算を付与するコピー専用の処理】
             const processForCopy = (val) => {
                 if (!val) return "";
-                const trimmed = val.trim();
-                const info = getPointInfo(trimmed); // 現在のポイントを取得
-                const lines = trimmed.split('\n');
+                let processed = val.trim();
+                
+                // ★追加：発光中（[ が開きっぱなし）なら ] を付けてから計算・コピーする
+                if (isLightOn(processed)) {
+                    processed += "]";
+                }
+                
+                const info = getPointInfo(processed); 
+                const lines = processed.split('\n');
                 const lastLine = lines[lines.length - 1] || "";
                 
-                // すでに(pts)で終わっているか、確定記号があるかチェック
                 const isFinished = lastLine.match(/[\d\)]$/) || circledNumbers.some(cn => lastLine.endsWith(cn));
                 
-                // 確定していないポイントがある場合のみ、(pts)を後ろに添える
                 if (info.pts > 0 && !info.isConsumed && !isFinished) {
-                    return trimmed + `(${info.pts})`;
+                    return processed + `(${info.pts})`;
                 }
-                return trimmed;
+                return processed;
             };
 
             text += appState.sets.map((s, i) => {
