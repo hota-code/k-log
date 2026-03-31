@@ -218,7 +218,7 @@
                         <div id="stat-bell" class="stat-line-bell">🔔 0 (---)</div>
                         <div class="stat-line-input">
                             <span>総G数</span>
-                            <input type="number" id="games-input" class="games-input" placeholder="0" oninput="saveGames()">
+                            <input type="number" id="games-input" class="games-input" oninput="saveGames()">
                             <button class="update-btn" onclick="manualUpdateStats()">更新</button>
                         </div>
                     </div>
@@ -455,7 +455,7 @@ const showRecoveryUI = () => {
 
             if (isMemo) {
                 document.getElementById('standard-view').style.display = 'none'; document.getElementById('memo-view').style.display = 'flex';
-                manualUpdateStats(); document.getElementById('games-input').value = appState.totalGames; document.getElementById('free-memo-area').value = appState.freeMemo || "";
+                manualUpdateStats(); document.getElementById('games-input').value = appState.totalGames || "" ; document.getElementById('free-memo-area').value = appState.freeMemo || "";
             } else {
                 document.getElementById('standard-view').style.display = 'flex'; document.getElementById('memo-view').style.display = 'none';
                 ['upper', 'history', 'lower'].forEach(l => {
