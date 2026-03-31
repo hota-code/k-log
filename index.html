@@ -600,15 +600,23 @@ const showRecoveryUI = () => {
             
             text = `【集計】\n総G数：${appState.totalGames}G\n🔔${appState.bellCount} ${bellProb}\n🔴${r.text}\n🟢${g.text}\n🔵${b.text}\n\n`;
             
-            const process = (val) => {
-                if (!val) return ""; 
-                let p = val.trim(); 
+            const processForCopy = (val) => {
+                if (!val) return "";
+                let p = val.trim();
+                // 発光中（[ が開きっぱなし）なら ] を補完する
                 if (isLightOn(p)) p += "]";
-                const info = getPointInfo(p), lastLine = p.split('\n').pop() || "";
+        
+                const info = getPointInfo(p); 
+                const lines = p.split('\n');
+                const lastLine = lines[lines.length - 1] || "";
                 const isFinished = lastLine.match(/[\d\)]$/) || circledNumbers.some(cn => lastLine.endsWith(cn));
-                return (info.pts > 0 && !info.isConsumed && !isFinished) ? p + `(${info.pts})` : p;
+                
+                if (info.pts > 0 && !info.isConsumed && !isFinished) {
+                    return p + `(${info.pts})`;
+                }
+                return p;
             };
-
+            
             text += appState.sets.map((s, i) => {
                 let lines = [`【${i + 1}】`];
                 if (s.upper) lines.push(s.upper.trim() + "\n");
