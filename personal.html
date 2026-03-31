@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#121212">
+    
+    <meta name="apple-mobile-web-app-title" content="Kabaneri Log">
+    <meta name="application-name" content="Kabaneri Log">
+    
+    <link rel="apple-touch-icon" href="rokkon.jpg">
+    <title>Kabaneri Log ver.1.3.0</title>
+    
+    <style>
+        /* --- カラー設定（1.2.2準拠） --- */
+        :root { 
+            --bg: #121212; --card: #1e1e1e; --text: #ffffff; 
+            --active-red: #ff5252; --active-green: #69f0ae; --active-blue: #448aff; 
+            --accent: #3f51b5; --action-bg: #3f51b5;
+            --next-bg: #ffffff; --next-text: #121212; 
+            --history-bg: #000000; --history-text: #00ffcc;
+            --extra-memo-bg: #1a1a1a; 
+            --border: #333333;
+            --header-bg: #222; --sub-bg: #1a1a1a;
+        }
+
+        /* ライトモード */
+        body.light-mode-theme {
+            --bg: #f8f8f8; --card: #f8f8f8; --text: #1c1c1e;
+            --accent: #3f51b5; --action-bg: #3f51b5;
+            --next-bg: rgba(63, 81, 181, 0.1); --next-text: #3f51b5; 
+            --history-bg: #f8f8f8; --history-text: #1c1c1e;
+            --extra-memo-bg: #f8f8f8; 
+            --border: #d1d1d6;
+            --header-bg: #f8f8f8; --sub-bg: #f8f8f8;
+        }
+
+        /* レイアウト */
+        body { 
+            font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; 
+            flex-direction: column; height: 100dvh; width: 100vw; overflow: hidden; transition: background 0.2s; 
+            -webkit-user-select: none; user-select: none; touch-action: manipulation; 
+        }
+
+        /* エフェクト */
+        #flash-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #fff; opacity: 0; pointer-events: none; z-index: 9999; transition: opacity 0.05s; }
+        .mark-btn:active, .selector-btn:active, .dynamic-btn:active, .undo-btn:active, .next-set-btn:active, .update-btn:active, .copy-btn:active, .capsule-btn:active { transform: scale(0.92); }
+        .is-selected { opacity: 0.4; border: 2px solid var(--accent) !important; }
+
+        /* 配置変更ツール */
+        .sort-controls-floating { position: fixed; right: 15px; bottom: 58px; display: none; flex-direction: column; gap: 10px; z-index: 11000; }
+        .capsule-btn { padding: 10px 0; width: 85px; border-radius: 30px; font-size: 0.85rem; font-weight: bold; border: none; text-align: center; color: white; transition: transform 0.05s; cursor: pointer; }
+        .btn-indigo { background: var(--accent); }
+        .btn-gray { background: #636366; }
+
+        /* タブ */
+        #tabs { height: 45px; background: var(--header-bg); display: flex; overflow-x: auto; border-bottom: 2px solid var(--border); flex-shrink: 0; scrollbar-width: none; -ms-overflow-style: none; scroll-behavior: smooth; padding-top: env(safe-area-inset-top); }
+        #tabs::-webkit-scrollbar { display: none; }
+        .tab { padding: 0 12px; line-height: 45px; border-right: 1px solid var(--border); font-size: 0.9rem; color: #888; flex-shrink: 0; cursor: pointer; text-align: center; min-width: 50px; position: relative; }
+        .tab.active { background: var(--accent); color: #fff; font-weight: bold; border-bottom: 3px solid #fff; }
+        .tab-memo { margin-left: auto; border-left: 2px solid var(--border); background: var(--header-bg); position: sticky; right: 0; min-width: 65px; }
+
+        /* 上部表示エリア */
+        #display-container { flex: 1; display: flex; flex-direction: column; background: var(--history-bg); overflow: hidden; border-bottom: 1px solid var(--border); }
+        .history-mode #display-container { height: 38vh; flex: none; }
+        #sub-selector { height: 32px; display: flex; background: var(--sub-bg); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+        .sub-btn { flex: 1; line-height: 32px; font-size: 0.75rem; color: #888; text-align: center; cursor: pointer; border-right: 1px solid var(--border); }
+        .sub-btn.active { background: var(--accent); color: #fff; font-weight: bold; }
+        
+        #content-body { flex: 1; overflow: hidden; }
+        .content-layer { display: none; height: 100%; width: 100%; }
+        .content-layer.active { display: flex; flex-direction: column; }
+        .history-row { height: 33.3%; display: flex; align-items: flex-start; overflow-y: auto; border-bottom: 1px solid var(--border); padding: 8px 15px; box-sizing: border-box; }
+        .symbol-fixed { position: sticky; top: 0; margin-right: 8px; font-size: 1.4rem; flex-shrink: 0; background: inherit; z-index: 10; line-height: 1.5; width: 1.5rem; text-align: center; }
+        .log-content { flex: 1; word-break: break-all; font-size: 1.4rem; white-space: pre-wrap; color: var(--history-text); font-weight: bold; outline: none; min-height: 1.5em; line-height: 1.5; }
+        .extra-memo { width: 100%; height: 100%; background: var(--extra-memo-bg); color: var(--text); border: none; padding: 12px; box-sizing: border-box; font-size: 1.1rem; outline: none; resize: none; line-height: 1.5; }
+
+        /* 下部操作エリア */
+        #control-area { height: 62vh; background: var(--card); display: flex; flex-direction: column; padding: 8px; gap: 8px; box-sizing: border-box; overflow-y: auto; border-top: 1px solid var(--border); padding-bottom: env(safe-area-inset-bottom); }
+        .memo-mode #control-area { display: none !important; padding-bottom: env(safe-area-inset-bottom);}
+        #color-selector-container { display: flex; justify-content: space-around; padding: 2px 0; }
+        .selector-btn { background: #333; border: 2px solid transparent; border-radius: 12px; padding: 8px 30px; font-size: 1.4rem; transition: transform 0.05s; }
+        body.light-mode-theme .selector-btn { background: #ffffff; border-color: #e5e5ea; }
+        .selector-btn.active-red { border-color: var(--active-red) !important; }
+        .selector-btn.active-green { border-color: var(--active-green) !important; }
+        .selector-btn.active-blue { border-color: var(--active-blue) !important; }
+
+        .mark-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .mark-btn { padding: 14px 0; font-size: 1.3rem; background: #3a3a3c; color: white; border: 1px solid #48484a; border-radius: 10px; font-weight: bold; transition: transform 0.05s; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
+        body.light-mode-theme .mark-btn { background: #ffffff; color: #1c1c1e; border-color: var(--border); }
+        .mark-btn.bell-btn { grid-column: span 2; background: #2c2c2e; border: 1px solid #ffd700; color: #ffd700; padding: 0; align-items: stretch; overflow: hidden; }
+        .mark-btn.light-btn { grid-column: span 2; background: #2c2c2e; border: 1px solid #ffffff; color: #ffffff; font-size: 1.1rem; }
+        body.light-mode-theme .mark-btn.light-btn { background: #ffffff; border: 1px solid var(--border); color: #1c1c1e; }
+        
+        .bell-side { width: 30%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: #888; opacity: 0.6; padding: 14px 0; }
+        .bell-center-group { flex: 1; display: flex; align-items: center; justify-content: center; padding: 14px 0; }
+        .bell-label { font-size: 1.2rem; line-height: 1; margin-right: 2px; }
+        .bell-center-input { width: 48px; background: transparent; border: none; color: #ffd700; text-align: center; font-size: 1.2rem; font-weight: bold; outline: none; padding: 0; margin: 0; font-family: inherit; line-height: 1; }
+        body.light-mode-theme .bell-center-input { color: #1c1c1e; }
+
+        .action-row { display: flex; gap: 8px; }
+        .dynamic-btn { flex: 1; padding: 14px; background: var(--action-bg); color: white; font-weight: bold; border-radius: 10px; border: none; font-size: 1rem; transition: transform 0.05s; }
+        .undo-btn { flex: 1; padding: 14px; background: #636366; color: #fff; border-radius: 10px; border: none; font-size: 1rem; font-weight: bold; transition: transform 0.05s; }
+        .next-set-btn { width: 100%; padding: 16px; background: var(--next-bg); color: var(--next-text); font-weight: bold; border-radius: 12px; border: none; font-size: 1.1rem; transition: transform 0.05s; }
+        body.light-mode-theme .next-set-btn { border: 2px solid var(--accent); }
+
+        /* 情報・集計 */
+        #memo-view { 
+            display: none; 
+            flex-direction: column; 
+            height: 100%; 
+            padding: 10px; 
+            box-sizing: border-box; 
+            background: var(--bg); 
+            color: var(--text); /* 文字色を強制的に指定 */
+            overflow-y: auto; 
+        }
+        .stats-box { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 10px; border: 1px solid var(--border); flex-shrink: 0; }
+        body.light-mode-theme .stats-box { background: #ffffff; }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-weight: bold; font-size: 1rem; }
+        .bell-stat-row-container { grid-column: span 2; border-top: 1px solid var(--border); padding-top: 12px; margin-top: 8px; display: flex; flex-direction: column; gap: 12px; }
+        .stat-line-bell { font-size: 1.1rem; color: #ffd700; font-weight: bold; }
+        body.light-mode-theme .stat-line-bell { color: #1c1c1e; }
+        .stat-line-input { display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: bold; }
+        .games-input { width: 90px; height: 32px; background: var(--bg); color: var(--text); border: 1px solid var(--accent); border-radius: 5px; text-align: center; font-weight: bold; font-size: 1rem; box-sizing: border-box; }
+        .update-btn { background: var(--accent); color: white; border: none; border-radius: 5px; height: 32px; padding: 0 15px; font-weight: bold; font-size: 0.85rem; transition: transform 0.05s; box-sizing: border-box; }
+        #free-memo-area { flex: 1; background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 12px; font-size: 1.1rem; outline: none; resize: none; min-height: 150px; }
+        body.light-mode-theme #free-memo-area { background: #ffffff; }
+
+        /* 設定・フッター */
+        .system-footer { display: flex; justify-content: space-between; align-items: center; padding: 8px 0 4px 0; border-top: 1px solid var(--border); margin-top: auto; position: relative; }
+        .copy-btn { background: var(--accent); color: white; border: none; border-radius: 5px; padding: 8px 15px; font-weight: bold; font-size: 0.85rem; transition: transform 0.05s; }
+        .subtle-btn { background: none; border: none; color: var(--text); text-decoration: underline; font-size: 0.85rem; cursor: pointer; padding: 5px; font-weight: bold; }
+        .version-text { font-size: 0.65rem; color: #555; position: absolute; right: 0; bottom: -4px; opacity: 0.6; }
+
+        #settings-modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 10000; }
+        #settings-content { width: 85%; max-width: 320px; background: var(--card); border-radius: 20px; overflow: hidden; }
+        .settings-header { background: var(--accent); color: #fff; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .settings-body { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; transition: .4s; border-radius: 28px; }
+        .slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent); }
+        input:checked + .slider:before { transform: translateX(22px); }
+        .disabled-controls { opacity: 0.35; pointer-events: none; filter: grayscale(0.8); }
+        
+        /* バックアップセクション */
+        .backup-section { border-top: 1px solid var(--border); padding-top: 15px; margin-top: 5px; }
+        .backup-label { font-size: 0.8rem; font-weight: bold; color: #888; margin-bottom: 10px; display: block; }
+        .backup-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .backup-btn { padding: 10px; font-size: 0.8rem; font-weight: bold; border-radius: 8px; border: 1px solid #fff; background: transparent; color: #fff; cursor: pointer; }
+        body.light-mode-theme .backup-btn { border-color: var(--accent); color: var(--accent); }
+    </style>
+</head>
+<body class="history-mode">
+    <div id="flash-overlay"></div>
+    
+    <div id="sort-done-overlay" class="sort-controls-floating">
+        <button class="capsule-btn btn-gray" onclick="resetToDefaultOrder()">デフォルト</button>
+        <button class="capsule-btn btn-indigo" onclick="toggleSortMode()">完了</button>
+    </div>
+
+    <div id="settings-modal" onclick="closeSettings(event)">
+        <div id="settings-content" onclick="event.stopPropagation()">
+            <div class="settings-header">
+                <span>設定 <small style="font-weight:normal; opacity:0.8; margin-left:5px;">ver.1.3.0</small></span>
+                <span style="cursor:pointer; font-size:1.5rem;" onclick="toggleSettingsModal()">×</span>
+            </div>
+            <div class="settings-body">
+                <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-weight:bold;color:var(--text);">ライトモード</span><label class="switch"><input type="checkbox" id="theme-toggle" onchange="toggleTheme()"><span class="slider"></span></label></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-weight:bold;color:var(--text);">フラッシュ</span><label class="switch"><input type="checkbox" id="flash-toggle" onchange="toggleFlashSetting()"><span class="slider"></span></label></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-weight:bold;color:var(--text);">自動発光</span><label class="switch"><input type="checkbox" id="auto-light-toggle" onchange="toggleAutoLightSetting()"><span class="slider"></span></label></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-weight:bold;color:var(--text);">配置変更</span><button class="update-btn" onclick="toggleSortMode()">開始する</button></div>
+                <div class="backup-section">
+                    <span class="backup-label">データの引き継ぎ・バックアップ</span>
+                    <div class="backup-btns">
+                        <button class="backup-btn" onclick="exportData()">書き出し</button>
+                        <button class="backup-btn" onclick="importData()">読み込み</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tabs"></div>
+    
+    <div id="display-container">
+        <div id="standard-view" style="height:100%; display:flex; flex-direction:column;">
+            <div id="sub-selector">
+                <div id="sub-btn-upper" class="sub-btn" onclick="switchSubLayer('upper')">上メモ</div>
+                <div id="sub-btn-history" class="sub-btn active" onclick="switchSubLayer('history')">ポイント</div>
+                <div id="sub-btn-lower" class="sub-btn" onclick="switchSubLayer('lower')">下メモ</div>
+            </div>
+            <div id="content-body">
+                <div id="layer-upper" class="content-layer"><textarea id="upper-memo" class="extra-memo" placeholder="上部メモ..." oninput="saveExtraMemo('upper')"></textarea></div>
+                <div id="layer-history" class="content-layer active">
+                    <div class="history-row" id="row-red"><span class="symbol-fixed">🔴</span><div id="log-red" class="log-content" contenteditable="true" oninput="saveEdit('red')"></div></div>
+                    <div class="history-row" id="row-green"><span class="symbol-fixed">🟢</span><div id="log-green" class="log-content" contenteditable="true" oninput="saveEdit('green')"></div></div>
+                    <div class="history-row" id="row-blue"><span class="symbol-fixed">🔵</span><div id="log-blue" class="log-content" contenteditable="true" oninput="saveEdit('blue')"></div></div>
+                </div>
+                <div id="layer-lower" class="content-layer"><textarea id="lower-memo" class="extra-memo" placeholder="下部メモ..." oninput="saveExtraMemo('lower')"></textarea></div>
+            </div>
+        </div>
+
+        <div id="memo-view">
+            <div class="stats-box">
+                <div class="stats-grid">
+                    <div id="stat-red">🔴 --/-- (--%)</div>
+                    <div id="stat-green">🟢 --/-- (--%)</div>
+                    <div id="stat-blue">🔵 --/-- (--%)</div>
+                    <div id="stat-total">合算 --/-- (--%)</div>
+                    <div class="bell-stat-row-container">
+                        <div id="stat-bell" class="stat-line-bell">🔔 0 (---)</div>
+                        <div class="stat-line-input">
+                            <span>総G数</span>
+                            <input type="number" id="games-input" class="games-input" oninput="saveGames()">
+                            <button class="update-btn" onclick="manualUpdateStats()">更新</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <textarea id="free-memo-area" placeholder="全体メモを入力..." oninput="saveMemo()"></textarea>
+        </div>
+    </div>
+
+    <div id="control-area">
+        <div id="color-selector-container"></div>
+        <div id="mark-grid-container" class="mark-grid"></div>
+        <div class="action-row" id="dynamic-actions"></div>
+        <div class="action-row"><button class="next-set-btn" onclick="goToNextSet()">次セット▷ポイント集計</button></div>
+        <div class="system-footer">
+            <button class="copy-btn" onclick="copyAllHistory()">履歴コピー</button>
+            <div>
+                <button class="subtle-btn" onclick="toggleSettingsModal()">設定</button>
+                <button class="subtle-btn" onclick="clearData()">リセット</button>
+            </div>
+            <span class="version-text">Kabaneri Log ver.1.3.0</span>
+        </div>
+    </div>
+
+    <script>
+        // --- 設定 ---
+        const KEY = 'kabaneri_log_official_data';
+        const circledNumbers = ["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫","⑬","⑭","⑮","⑯","⑰","⑱","⑲","⑳"];
+        const colorLabels = { red: '🔴', green: '🟢', blue: '🔵' };
+
+        function getInitialState() { 
+            return { 
+                activeSetIdx: 0, 
+                activeColor: 'red', 
+                viewMode: 'history', 
+                subLayer: 'history', 
+                sets: [{ red: "", green: "", blue: "", upper: "", lower: "" }], 
+                bellCount: 0, 
+                totalGames: 0, 
+                freeMemo: "", 
+                buttonOrder: ['◯', '◎', '●', '☆', '★', '◇', '◆', '＊', '🔔', '発光'], 
+                colorOrder: ['red', 'green', 'blue'], 
+                isLightMode: false, 
+                flashEnabled: true, 
+                autoLightMode: true, 
+                isSortMode: false, 
+            }; 
+        }
+        
+        // --- 読み込みエラーガード機能（Ver. 1.2.7） ---
+        let appState;
+        try {
+            const saved = localStorage.getItem(KEY);
+            appState = saved ? JSON.parse(saved) : getInitialState();
+            
+            if (!appState || typeof appState !== 'object') throw new Error("Invalid data");
+        } catch (e) {
+            console.error("Critical Data Error:", e);
+
+            /* catchブロック内の showRecoveryUI を以下に差し替え */
+const showRecoveryUI = () => {
+    document.body.innerHTML = `
+        <div style="height:100vh; background:#121212; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px; box-sizing:border-box; font-family:sans-serif;">
+            
+            <p style="font-size:1.1rem; line-height:1.6; color:#fff; margin-bottom:40px; font-weight:bold;">
+                データの読み込みに失敗しました。<br>
+                再読み込みを試してください。
+            </p>
+            
+            <button onclick="location.reload()" style="width:230px; padding:16px; background:#3f51b5; color:#fff; border:none; border-radius:12px; font-size:1.1rem; font-weight:bold; margin-bottom:15px; cursor:pointer;">
+                再読み込み
+            </button>
+            
+            <button onclick="importData()" style="width:230px; padding:16px; background:transparent; color:#fff; border:1px solid #fff; border-radius:12px; font-size:1.1rem; font-weight:bold; cursor:pointer;">
+                バックアップから復元
+            </button>
+
+            <button onclick="if(confirm('データを消去して初期化しますか？')){ localStorage.removeItem(KEY); location.reload(); }" 
+                    style="width:230px; padding:16px; background:transparent; color:#3f51b5; border:1px solid #3f51b5; border-radius:12px; font-size:1.1rem; font-weight:bold; cursor:pointer; margin-top:50px;">
+                初期化して復旧
+            </button>
+        </div>
+    `;
+};
+
+            if (document.body) {
+                showRecoveryUI();
+            } else {
+                window.addEventListener('DOMContentLoaded', showRecoveryUI);
+            }
+
+            throw new Error("App execution stopped to protect data.");
+        }
+
+        // バージョン同期（設定維持の心臓部）
+        (function() {
+            const latest = getInitialState();
+            // 新キーの補完
+            Object.keys(latest).forEach(k => { if (appState[k] === undefined) appState[k] = latest[k]; });
+            // ボタン配置の同期
+            appState.buttonOrder = appState.buttonOrder.filter(b => latest.buttonOrder.includes(b));
+            latest.buttonOrder.forEach((b, idx) => { 
+                if (!appState.buttonOrder.includes(b)) appState.buttonOrder.splice(idx, 0, b); 
+            });
+            // カラー配置の同期
+            appState.colorOrder = appState.colorOrder.filter(c => latest.colorOrder.includes(c));
+            latest.colorOrder.forEach(c => { if (!appState.colorOrder.includes(c)) appState.colorOrder.push(c); });
+
+            localStorage.setItem(KEY, JSON.stringify(appState));
+        })();
+
+        let isLongPress = false, tabTimer = null, sortTargetIdx = null;
+
+        // --- 共通機能 ---
+        function triggerFlash() { if (!appState.flashEnabled) return; const overlay = document.getElementById('flash-overlay'); overlay.style.opacity = '0.3'; setTimeout(() => { overlay.style.opacity = '0'; }, 50); }
+        function autoScroll() { if (appState.viewMode !== 'history') return; ['red', 'green', 'blue'].forEach(c => { const el = document.getElementById('row-' + c); if (el) el.scrollTop = el.scrollHeight; }); }
+        function normalizeText(text) { if (!text) return ""; return String(text).replace(/[○〇]/g, "◯"); }
+        function isLightOn(text) { if (!text) return false; const lastOpen = text.lastIndexOf('['); const lastClose = text.lastIndexOf(']'); return lastOpen > lastClose; }
+
+        // ポイント計算
+        function getPointInfo(text) {
+            const normalized = normalizeText(text);
+            if (!normalized.trim()) return { pts: 0, isConsumed: false };
+            const lines = normalized.split('\n').filter(l => l.trim() !== "");
+            const lastLine = lines[lines.length - 1] || "";
+            const isConsumed = lastLine.includes(".") || lastLine.includes("＊");
+            const endBracketMatch = lastLine.match(/\((\d+)\)$/);
+            if (endBracketMatch && !isConsumed && !lastLine.includes('→')) return { pts: parseInt(endBracketMatch[1], 10), isConsumed: false };
+            const carryMatch = lastLine.match(/\((\d+)\)→/);
+            let basePts = carryMatch ? parseInt(carryMatch[1], 10) : 0;
+            let textToCount = lastLine;
+            if (lastLine.includes(".")) {
+                const afterDot = lastLine.substring(lastLine.lastIndexOf(".") + 1);
+                basePts = parseInt(afterDot.match(/^\d+/) || [0], 10);
+                textToCount = afterDot;
+            } else if (lastLine.includes("＊")) {
+                const openIdx = lastLine.lastIndexOf("(", lastLine.lastIndexOf("＊"));
+                if (openIdx !== -1) basePts = parseInt(lastLine.substring(openIdx + 1, lastLine.indexOf(")", openIdx)) || 0, 10);
+                textToCount = lastLine.substring(lastLine.lastIndexOf("＊") + 1);
+            }
+            let symPts = 0;
+            const cleanText = textToCount.replace(/\(\d+\)/g, "");
+            for (const char of cleanText) {
+                if (char === '◯') symPts += 1;
+                else if (['★', '◇'].includes(char)) symPts += 30;
+                else if (char === '◆') symPts += 60;
+                else if (['◎', '●', '☆'].includes(char)) symPts += 15;
+            }
+            return { pts: basePts + symPts, isConsumed: isConsumed };
+        }
+
+        // 表示更新
+        function updateDisplaysOnly() {
+            const cur = appState.sets[appState.activeSetIdx];
+            ['red', 'green', 'blue'].forEach(c => {
+                const el = document.getElementById('log-' + c);
+                if (el && document.activeElement !== el) el.innerText = cur[c] || "";
+            });
+            const bellInput = document.querySelector('.bell-center-input');
+            if (bellInput) bellInput.value = appState.bellCount;
+            setTimeout(autoScroll, 10);
+            localStorage.setItem(KEY, JSON.stringify(appState));
+        }
+
+        // 設定画面の開閉
+        function toggleSettingsModal() { 
+            const modal = document.getElementById('settings-modal');
+            modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex'; 
+        }
+
+        // 設定の切り替え（保存処理付き）
+        function toggleTheme() { 
+            appState.isLightMode = document.getElementById('theme-toggle').checked; 
+            saveAndRefresh();
+        }
+        function toggleFlashSetting() { 
+            appState.flashEnabled = document.getElementById('flash-toggle').checked; 
+            saveAndRefresh();
+        }
+        function toggleAutoLightSetting() { 
+            appState.autoLightMode = document.getElementById('auto-light-toggle').checked; 
+            saveAndRefresh();
+        }
+
+        // 保存して画面を更新する共通処理
+        function saveAndRefresh() {
+            localStorage.setItem(KEY, JSON.stringify(appState));
+            updateUI();
+        }
+        
+        function toggleSortMode() { 
+            appState.isSortMode = !appState.isSortMode; 
+            sortTargetIdx = null; 
+            document.getElementById('settings-modal').style.display = 'none'; 
+            document.getElementById('sort-done-overlay').style.display = appState.isSortMode ? 'flex' : 'none'; 
+            // 【追加】完了時に保存する
+            if (!appState.isSortMode) {
+                localStorage.setItem(KEY, JSON.stringify(appState));
+            }
+            updateUI(); 
+        }
+
+        function resetToDefaultOrder() { 
+            if(!confirm('配置をデフォルトに戻しますか？')) return; 
+            appState.buttonOrder = ['◯', '◎', '●', '☆', '★', '◇', '◆', '＊', '🔔', '発光']; 
+            appState.colorOrder = ['red', 'green', 'blue']; 
+            updateUI(); 
+        }
+
+        // ナビゲーション
+        function switchSet(idx) { if (isLongPress) { isLongPress = false; return; } triggerFlash(); appState.viewMode = 'history'; appState.activeSetIdx = idx; updateUI(); }
+        function showMemo() { triggerFlash(); appState.viewMode = 'memo'; updateUI(); }
+        function switchSubLayer(l) { appState.subLayer = l; updateUI(); }
+
+        // メイン描画
+        function updateUI() {
+            const isMemo = appState.viewMode === 'memo';
+            document.body.className = (isMemo ? "memo-mode" : "history-mode") + (appState.isLightMode ? " light-mode-theme" : "");
+
+            // --- 【追加】設定画面のスイッチを現在のデータ（appState）に合わせる ---
+            document.getElementById('theme-toggle').checked = appState.isLightMode;
+            document.getElementById('flash-toggle').checked = appState.flashEnabled;
+            document.getElementById('auto-light-toggle').checked = appState.autoLightMode;
+            
+            const tabArea = document.getElementById('tabs');
+            tabArea.innerHTML = appState.sets.map((_, i) => `
+                <div class="tab ${!isMemo && i === appState.activeSetIdx ? 'active' : ''}" 
+                     onmousedown="tabTimer=setTimeout(()=>{isLongPress=true;handleTabLongPress(${i})},800)" 
+                     onmouseup="clearTimeout(tabTimer)" 
+                     ontouchstart="tabTimer=setTimeout(()=>{isLongPress=true;handleTabLongPress(${i})},800)" 
+                     ontouchend="clearTimeout(tabTimer)" 
+                     onclick="switchSet(${i})">【${i + 1}】</div>
+            `).join('') + `<div class="tab tab-memo ${isMemo ? 'active' : ''}" onclick="showMemo()">情報</div>`;
+
+            if (isMemo) {
+                document.getElementById('standard-view').style.display = 'none'; document.getElementById('memo-view').style.display = 'flex';
+                manualUpdateStats(); document.getElementById('games-input').value = appState.totalGames || "" ; document.getElementById('free-memo-area').value = appState.freeMemo || "";
+            } else {
+                document.getElementById('standard-view').style.display = 'flex'; document.getElementById('memo-view').style.display = 'none';
+                ['upper', 'history', 'lower'].forEach(l => {
+                    const btn = document.getElementById('sub-btn-' + l); const layer = document.getElementById('layer-' + l);
+                    if(btn) btn.classList.toggle('active', appState.subLayer === l);
+                    if(layer) layer.classList.toggle('active', appState.subLayer === l);
+                });
+                updateDisplaysOnly();
+                const cCont = document.getElementById('color-selector-container'); cCont.innerHTML = '';
+                appState.colorOrder.forEach((c, idx) => {
+                    const btn = document.createElement('button'); btn.className = `selector-btn ${c === appState.activeColor ? 'active-' + c : ''}`;
+                    if(appState.isSortMode && sortTargetIdx === 'c' + idx) btn.classList.add('is-selected');
+                    if (isLightOn(appState.sets[appState.activeSetIdx][c])) {
+                        const softColors = { red: 'rgba(255, 82, 82, 0.3)', green: 'rgba(105, 240, 174, 0.3)', blue: 'rgba(68, 138, 255, 0.3)' };
+                        btn.style.backgroundColor = softColors[c];
+                    }
+                    btn.innerHTML = colorLabels[c]; btn.onclick = () => {
+                        triggerFlash();
+                        if(appState.isSortMode) {
+                            const cid = 'c' + idx; if(sortTargetIdx === null) { sortTargetIdx = cid; updateUI(); }
+                            else if(typeof sortTargetIdx === 'string') { const oldIdx = parseInt(sortTargetIdx.substring(1)); const temp = appState.colorOrder[oldIdx]; appState.colorOrder[oldIdx] = appState.colorOrder[idx]; appState.colorOrder[idx] = temp; sortTargetIdx = null; updateUI(); }
+                        } else { appState.activeColor = c; updateUI(); }
+                    };
+                    cCont.appendChild(btn);
+                });
+                const grid = document.getElementById('mark-grid-container'); grid.innerHTML = '';
+                appState.buttonOrder.forEach((mark, idx) => {
+                    const btn = document.createElement('button'); btn.className = 'mark-btn' + (mark === '🔔' ? ' bell-btn' : '') + (mark === '発光' ? ' light-btn' : '');
+                    if(appState.isSortMode && sortTargetIdx === idx) btn.classList.add('is-selected');
+                    if (mark === '🔔') {
+                        btn.innerHTML = `<div class="bell-side" onclick="event.stopPropagation();if(appState.isSortMode)handleMarkClick(${idx});else{triggerFlash();appState.bellCount=Math.max(0,appState.bellCount-1);updateDisplaysOnly();}">－</div><div class="bell-center-group" onclick="event.stopPropagation();if(appState.isSortMode)handleMarkClick(${idx});"><span class="bell-label">🔔 </span><input type="number" class="bell-center-input" value="${appState.bellCount}" oninput="appState.bellCount=Math.max(0,parseInt(this.value)||0);localStorage.setItem(KEY,JSON.stringify(appState))"></div><div class="bell-side" onclick="event.stopPropagation();if(appState.isSortMode)handleMarkClick(${idx});else{triggerFlash();appState.bellCount++;updateDisplaysOnly();}">＋</div>`;
+                    } else { btn.innerText = mark; btn.onclick = () => handleMarkClick(idx); }
+                    grid.appendChild(btn);
+                });
+                const act = document.getElementById('dynamic-actions');
+                act.innerHTML = (appState.activeColor === 'blue') 
+                    ? `<button class="dynamic-btn" onclick="doAction('dot')">周期</button><button class="dynamic-btn" onclick="doAction('paren')">G数</button><button class="undo-btn" onclick="doUndo()">戻る</button>`
+                    : `<button class="dynamic-btn" onclick="doAction('dot')">CZ</button><button class="undo-btn" onclick="doUndo()">戻る</button>`;
+                const isL = (appState.subLayer !== 'history') || appState.isSortMode;
+                [cCont, grid, act, document.querySelector('.next-set-btn')].forEach(el => el.classList.toggle('disabled-controls', isL));
+                if(appState.isSortMode) { grid.classList.remove('disabled-controls'); cCont.classList.remove('disabled-controls'); }
+            }
+            localStorage.setItem(KEY, JSON.stringify(appState));
+        }
+
+        // マーククリック
+        function handleMarkClick(idx) {
+            triggerFlash();
+            if (appState.isSortMode) {
+                if (sortTargetIdx === null) { sortTargetIdx = idx; updateUI(); }
+                else if(typeof sortTargetIdx === 'number') { const temp = appState.buttonOrder[sortTargetIdx]; appState.buttonOrder[sortTargetIdx] = appState.buttonOrder[idx]; appState.buttonOrder[idx] = temp; sortTargetIdx = null; updateUI(); }
+                return;
+            }
+            const mark = appState.buttonOrder[idx]; const cur = appState.sets[appState.activeSetIdx]; const c = appState.activeColor;
+            if (mark === '＊') { 
+                if (isLightOn(cur[c])) cur[c] += "]";
+                const info = getPointInfo(cur[c]); const num = (c === 'blue') ? getNextBlueNumber() : ""; 
+                const autoStart = appState.autoLightMode ? "[" : "";
+                cur[c] += "(" + info.pts + ")＊" + num + "\n" + autoStart; 
+                updateUI(); 
+            } else if (mark === '発光') {
+                const on = isLightOn(cur[c]); cur[c] += on ? "]" : "["; updateUI(); 
+            } else { 
+                cur[c] += mark;
+                if (appState.autoLightMode && ['◎', '●', '★', '◆'].includes(mark) && !isLightOn(cur[c])) {
+                    cur[c] += "["; updateUI();
+                } else { updateDisplaysOnly(); }
+            }
+        }
+
+        // 集計
+        function countSymbols(color) {
+            let circle = 0, double = 0;
+            appState.sets.forEach(s => {
+                let text = normalizeText(s[color]).replace(/\[[^\]]*(\]|(?=$))/g, ""); 
+                circle += (text.match(/◯/g) || []).length;
+                double += (text.match(/◎/g) || []).length;
+            });
+            const total = circle + double;
+            const rate = total > 0 ? ((double / total) * 100).toFixed(1) : "0.0";
+            return { total, double, rate, text: `${double}/${total} (${rate}%)` };
+        }
+
+        function manualUpdateStats() {
+            const r = countSymbols('red'), g = countSymbols('green'), b = countSymbols('blue');
+            const combTotal = r.total + g.total + b.total, combDouble = r.double + g.double + b.double, combRate = combTotal > 0 ? ((combDouble / combTotal) * 100).toFixed(1) : "0.0";
+            document.getElementById('stat-red').innerText = `🔴 ${r.text}`; document.getElementById('stat-green').innerText = `🟢 ${g.text}`; document.getElementById('stat-blue').innerText = `🔵 ${b.text}`;
+            document.getElementById('stat-total').innerText = `合算 ${combDouble}/${combTotal} (${combRate}%)`;
+            const bellProb = appState.bellCount > 0 && appState.totalGames > 0 ? `1/${(appState.totalGames / appState.bellCount).toFixed(1)}` : "---";
+            document.getElementById('stat-bell').innerText = `🔔 ${appState.bellCount} (${bellProb})`;
+            triggerFlash();
+        }
+
+        // 保存系
+        function saveGames() { appState.totalGames = parseInt(document.getElementById('games-input').value) || 0; localStorage.setItem(KEY, JSON.stringify(appState)); }
+        function saveMemo() { appState.freeMemo = document.getElementById('free-memo-area').value; localStorage.setItem(KEY, JSON.stringify(appState)); }
+        function saveExtraMemo(t) { appState.sets[appState.activeSetIdx][t] = document.getElementById(t + '-memo').value; localStorage.setItem(KEY, JSON.stringify(appState)); }
+        function saveEdit(c) { appState.sets[appState.activeSetIdx][c] = document.getElementById('log-' + c).innerText; localStorage.setItem(KEY, JSON.stringify(appState)); updateUI(); }
+
+        function doAction(type) { triggerFlash(); const cur = appState.sets[appState.activeSetIdx]; const c = appState.activeColor; if (isLightOn(cur[c])) cur[c] += "]"; const info = getPointInfo(cur[c]); const num = (c === 'blue') ? getNextBlueNumber() : ""; cur[c] += (type === 'dot' ? "." : "(") + info.pts + (type === 'dot' ? "" : ")") + num + "\n"; updateUI(); }
+        function doUndo() { triggerFlash(); const cur = appState.sets[appState.activeSetIdx]; const txt = cur[appState.activeColor]; if (txt.length > 0) { cur[appState.activeColor] = txt.slice(0, -1); updateUI(); } }
+        function getNextBlueNumber() { const txt = String(appState.sets[appState.activeSetIdx].blue || ""); let count = 0; circledNumbers.forEach(n => { if (txt.includes(n)) count++; }); return circledNumbers[count] || (count + 1); }
+
+        // セット移動
+        function goToNextSet() {
+            triggerFlash(); 
+            if (!confirm('次セットに進みますか？')) return;
+            const cur = appState.sets[appState.activeSetIdx]; 
+            const next = { red: "", green: "", blue: "", upper: "", lower: "" };
+            
+            ['red', 'green', 'blue'].forEach(c => {
+                if (isLightOn(cur[c])) cur[c] += "]";
+                const txt = cur[c] || ""; 
+                if (!txt.trim()) return;
+                
+                const info = getPointInfo(txt); 
+                const lines = txt.split('\n').filter(l => l.trim() !== ""); 
+                const lastLine = lines[lines.length - 1] || "";
+                
+                // 行が数字や閉じカッコで終わっていない（＝ポイントが浮いている）状態をチェック
+                const isFinished = lastLine.match(/[\d\)]$/) || circledNumbers.some(cn => lastLine.endsWith(cn));
+                
+                if (info.pts > 0 && !info.isConsumed) { 
+                    // 今のセットの末尾にポイントを書き込んでから改行
+                    if (!isFinished) cur[c] += "(" + info.pts + ")\n"; 
+                    // 青以外は「→」で引き継ぎ
+                    if (c !== 'blue') next[c] = "(" + info.pts + ")→"; 
+                }
+            });
+            appState.sets.push(next); 
+            appState.activeSetIdx = appState.sets.length - 1; 
+            updateUI();
+            setTimeout(() => { const ta = document.getElementById('tabs'); if (ta) ta.scrollLeft = ta.scrollWidth; }, 100);
+        }
+
+        // 削除・コピー・リセット
+        function handleTabLongPress(idx) { if (confirm(appState.sets.length > 1 ? `【${idx+1}】を削除しますか？` : `【${idx+1}】をリセットしますか？`)) { if (appState.sets.length > 1) { appState.sets.splice(idx, 1); appState.activeSetIdx = Math.max(0, appState.sets.length - 1); } else { appState.sets[0] = { red: "", green: "", blue: "", upper: "", lower: "" }; } updateUI(); } }
+        async function copyAllHistory() {
+            let text = ""; // 最初に中身を空にする（重複防止）
+            const r = countSymbols('red'), g = countSymbols('green'), b = countSymbols('blue');
+            const bellProb = appState.bellCount > 0 && appState.totalGames > 0 ? `(1/${(appState.totalGames/appState.bellCount).toFixed(1)})` : "";
+            
+            text = `【集計】\n総G数：${appState.totalGames}G\n🔔${appState.bellCount} ${bellProb}\n🔴${r.text}\n🟢${g.text}\n🔵${b.text}\n\n`;
+            
+            const processForCopy = (val) => {
+                if (!val) return "";
+                let p = val.trim();
+                // 発光中（[ が開きっぱなし）なら ] を補完する
+                if (isLightOn(p)) p += "]";
+        
+                const info = getPointInfo(p); 
+                const lines = p.split('\n');
+                const lastLine = lines[lines.length - 1] || "";
+                const isFinished = lastLine.match(/[\d\)]$/) || circledNumbers.some(cn => lastLine.endsWith(cn));
+                
+                if (info.pts > 0 && !info.isConsumed && !isFinished) {
+                    return p + `(${info.pts})`;
+                }
+                return p;
+            };
+            
+            text += appState.sets.map((s, i) => {
+                let lines = [`【${i + 1}】`];
+                if (s.upper) lines.push(s.upper.trim() + "\n");
+                lines.push(`🔴${processForCopy(s.red)}`);
+                lines.push(`🟢${processForCopy(s.green)}`);
+                lines.push(`🔵${processForCopy(s.blue)}`);
+                if (s.lower) lines.push("\n" + s.lower.trim());
+                return lines.join('\n');
+            }).join('\n\n');
+            
+            if(appState.freeMemo) text += `\n\n【メモ】\n${appState.freeMemo}`;
+            
+            await navigator.clipboard.writeText(text); 
+            alert("コピー完了"); 
+        }
+        function clearData() { if (confirm('データをリセットしますか？')) { appState.activeSetIdx = 0; appState.sets = [{ red: "", green: "", blue: "", upper: "", lower: "" }]; appState.bellCount = 0; appState.totalGames = 0; appState.freeMemo = ""; updateUI(); } }
+        function closeSettings(e) { if(e.target.id === 'settings-modal') toggleSettingsModal(); }
+
+        // --- バックアップ機能 ---
+        function exportData() {
+            try {
+                const dataStr = btoa(unescape(encodeURIComponent(JSON.stringify(appState))));
+                navigator.clipboard.writeText(dataStr).then(() => alert("引き継ぎコードをコピーしました。")).catch(e => alert("コピー失敗"));
+            } catch(e) { alert("書き出しエラー"); }
+        }
+
+        function importData() {
+            const code = prompt("引き継ぎコードを貼り付けてください。");
+            if (!code) return;
+            try {
+                const decoded = JSON.parse(decodeURIComponent(escape(atob(code))));
+                if (confirm("既存のデータを上書きして復元しますか？")) {
+                    // 1. 保存
+                    localStorage.setItem(KEY, JSON.stringify(decoded)); 
+                    appState = decoded; 
+                    
+                    if (document.getElementById('control-area')) {
+                        // 2. 描画更新
+                        updateUI();
+                        // 3. 設定画面を閉じる（これで読み込み成功がすぐ分かる）
+                        toggleSettingsModal();
+                        alert("復元完了");
+                    } else {
+                        // エラー画面からの復帰
+                        alert("復元完了！再起動します。");
+                        window.location.reload();
+                    }
+                }
+            } catch(e) { 
+                alert("コードが正しくありません。"); 
+            }
+        }
+
+        // 初期化
+        updateUI();
+    </script>
+</body>
+</html>
