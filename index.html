@@ -3,27 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
+
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    
+
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#121212">
 
     <meta name="apple-mobile-web-app-title" content="Kabaneri Log">
     <meta name="application-name" content="Kabaneri Log">
 
-    <title>Kabaneri Log ver.1.4.0</title>
-    
+    <title>Kabaneri Log ver.2.0.0</title>
+
     <style>
         /* --- カラー設定（1.2.2準拠） --- */
-        :root { 
-            --bg: #121212; --card: #1e1e1e; --text: #ffffff; 
-            --active-red: #ff5252; --active-green: #69f0ae; --active-blue: #448aff; 
+        :root {
+            --bg: #121212; --card: #1e1e1e; --text: #ffffff;
+            --active-red: #ff5252; --active-green: #69f0ae; --active-blue: #448aff;
             --accent: #3f51b5; --action-bg: #3f51b5;
-            --next-bg: #ffffff; --next-text: #121212; 
+            --next-bg: #ffffff; --next-text: #121212;
             --history-bg: #000000; --history-text: #00ffcc;
-            --extra-memo-bg: #1a1a1a; 
+            --extra-memo-bg: #1a1a1a;
             --border: #333333;
             --header-bg: #222; --sub-bg: #1a1a1a;
         }
@@ -32,18 +32,18 @@
         body.light-mode-theme {
             --bg: #f8f8f8; --card: #f8f8f8; --text: #1c1c1e;
             --accent: #3f51b5; --action-bg: #3f51b5;
-            --next-bg: rgba(63, 81, 181, 0.1); --next-text: #3f51b5; 
+            --next-bg: rgba(63, 81, 181, 0.1); --next-text: #3f51b5;
             --history-bg: #f8f8f8; --history-text: #1c1c1e;
-            --extra-memo-bg: #f8f8f8; 
+            --extra-memo-bg: #f8f8f8;
             --border: #d1d1d6;
             --header-bg: #f8f8f8; --sub-bg: #f8f8f8;
         }
 
         /* レイアウト */
-        body { 
-            font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; 
-            flex-direction: column; height: 100dvh; width: 100vw; overflow: hidden; transition: background 0.2s; 
-            -webkit-user-select: none; user-select: none; touch-action: manipulation; 
+        body {
+            font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex;
+            flex-direction: column; height: 100dvh; width: 100vw; overflow: hidden; transition: background 0.2s;
+            -webkit-user-select: none; user-select: none; touch-action: manipulation;
         }
 
         /* エフェクト */
@@ -70,7 +70,7 @@
         #sub-selector { height: 32px; display: flex; background: var(--sub-bg); border-bottom: 1px solid var(--border); flex-shrink: 0; }
         .sub-btn { flex: 1; line-height: 32px; font-size: 0.75rem; color: #888; text-align: center; cursor: pointer; border-right: 1px solid var(--border); }
         .sub-btn.active { background: var(--accent); color: #fff; font-weight: bold; }
-        
+
         #content-body { flex: 1; overflow: hidden; }
         .content-layer { display: none; height: 100%; width: 100%; }
         .content-layer.active { display: flex; flex-direction: column; }
@@ -95,7 +95,7 @@
         .mark-btn.bell-btn { grid-column: span 2; background: #2c2c2e; border: 1px solid #ffd700; color: #ffd700; padding: 0; align-items: stretch; overflow: hidden; }
         .mark-btn.light-btn { grid-column: span 2; background: #2c2c2e; border: 1px solid #ffffff; color: #ffffff; font-size: 1.1rem; }
         body.light-mode-theme .mark-btn.light-btn { background: #ffffff; border: 1px solid var(--border); color: #1c1c1e; }
-        
+
         .bell-side { width: 30%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: #888; opacity: 0.6; padding: 14px 0; }
         .bell-center-group { flex: 1; display: flex; align-items: center; justify-content: center; padding: 14px 0; }
         .bell-label { font-size: 1.2rem; line-height: 1; margin-right: 2px; }
@@ -109,15 +109,15 @@
         body.light-mode-theme .next-set-btn { border: 2px solid var(--accent); }
 
         /* 情報・集計 */
-        #memo-view { 
-            display: none; 
-            flex-direction: column; 
-            height: 100%; 
-            padding: 10px; 
-            box-sizing: border-box; 
-            background: var(--bg); 
+        #memo-view {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            background: var(--bg);
             color: var(--text); /* 文字色を強制的に指定 */
-            overflow-y: auto; 
+            overflow-y: auto;
         }
         .stats-box { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 10px; border: 1px solid var(--border); flex-shrink: 0; }
         body.light-mode-theme .stats-box { background: #ffffff; }
@@ -148,7 +148,7 @@
         input:checked + .slider { background-color: var(--accent); }
         input:checked + .slider:before { transform: translateX(22px); }
         .disabled-controls { opacity: 0.35; pointer-events: none; filter: grayscale(0.8); }
-        
+
         /* バックアップセクション */
         .backup-section { border-top: 1px solid var(--border); padding-top: 15px; margin-top: 5px; }
         .backup-label { font-size: 0.8rem; font-weight: bold; color: #888; margin-bottom: 10px; display: block; }
@@ -159,7 +159,7 @@
 </head>
 <body class="history-mode">
     <div id="flash-overlay"></div>
-    
+
     <div id="sort-done-overlay" class="sort-controls-floating">
         <button class="capsule-btn btn-gray" onclick="resetToDefaultOrder()">デフォルト</button>
         <button class="capsule-btn btn-indigo" onclick="toggleSortMode()">完了</button>
@@ -168,7 +168,7 @@
     <div id="settings-modal" onclick="closeSettings(event)">
         <div id="settings-content" onclick="event.stopPropagation()">
             <div class="settings-header">
-                <span>設定 <small style="font-weight:normal; opacity:0.8; margin-left:5px;">ver.1.4.0</small></span>
+                <span>設定 <small style="font-weight:normal; opacity:0.8; margin-left:5px;">ver.2.0.0</small></span>
                 <span style="cursor:pointer; font-size:1.5rem;" onclick="toggleSettingsModal()">×</span>
             </div>
             <div class="settings-body">
@@ -188,7 +188,7 @@
     </div>
 
     <div id="tabs"></div>
-    
+
     <div id="display-container">
         <div id="standard-view" style="height:100%; display:flex; flex-direction:column;">
             <div id="sub-selector">
@@ -239,7 +239,7 @@
                 <button class="subtle-btn" onclick="toggleSettingsModal()">設定</button>
                 <button class="subtle-btn" onclick="clearData()">リセット</button>
             </div>
-            <span class="version-text">Kabaneri Log ver.1.4.0</span>
+            <span class="version-text">Kabaneri Log ver.2.0.0</span>
         </div>
     </div>
 
@@ -249,31 +249,35 @@
         const circledNumbers = ["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫","⑬","⑭","⑮","⑯","⑰","⑱","⑲","⑳"];
         const colorLabels = { red: '🔴', green: '🟢', blue: '🔵' };
 
-        function getInitialState() { 
-            return { 
-                activeSetIdx: 0, 
-                activeColor: 'red', 
-                viewMode: 'history', 
-                subLayer: 'history', 
-                sets: [{ red: "", green: "", blue: "", upper: "", lower: "" }], 
-                bellCount: 0, 
-                totalGames: 0, 
-                freeMemo: "", 
-                buttonOrder: ['◯', '◎', '●', '☆', '★', '◇', '◆', '＊', '🔔', '発光'], 
-                colorOrder: ['red', 'green', 'blue'], 
-                isLightMode: false, 
-                flashEnabled: true, 
-                autoLightMode: true, 
-                isSortMode: false, 
-            }; 
+        // ポイントの数値（🔵だけ別。数値を変えるときはここだけ直す）
+        const POINTS      = { '◯': 1, '◎': 10, '●': 10, '☆': 10, '★': 20, '◇': 20, '◆': 40 };
+        const POINTS_BLUE = { '◯': 1, '◎': 2,  '●': 2,  '☆': 2,  '★': 3,  '◇': 3,  '◆': 4 };
+
+        function getInitialState() {
+            return {
+                activeSetIdx: 0,
+                activeColor: 'red',
+                viewMode: 'history',
+                subLayer: 'history',
+                sets: [{ red: "", green: "", blue: "", upper: "", lower: "" }],
+                bellCount: 0,
+                totalGames: 0,
+                freeMemo: "",
+                buttonOrder: ['◯', '◎', '●', '☆', '★', '◇', '◆', '＊', '🔔', '発光'],
+                colorOrder: ['red', 'green', 'blue'],
+                isLightMode: false,
+                flashEnabled: true,
+                autoLightMode: true,
+                isSortMode: false,
+            };
         }
-        
+
         // --- 読み込みエラーガード機能（Ver. 1.2.7） ---
         let appState;
         try {
             const saved = localStorage.getItem(KEY);
             appState = saved ? JSON.parse(saved) : getInitialState();
-            
+
             if (!appState || typeof appState !== 'object') throw new Error("Invalid data");
         } catch (e) {
             console.error("Critical Data Error:", e);
@@ -282,21 +286,21 @@
 const showRecoveryUI = () => {
     document.body.innerHTML = `
         <div style="height:100vh; background:#121212; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px; box-sizing:border-box; font-family:sans-serif;">
-            
+
             <p style="font-size:1.1rem; line-height:1.6; color:#fff; margin-bottom:40px; font-weight:bold;">
                 データの読み込みに失敗しました。<br>
                 再読み込みを試してください。
             </p>
-            
+
             <button onclick="location.reload()" style="width:230px; padding:16px; background:#3f51b5; color:#fff; border:none; border-radius:12px; font-size:1.1rem; font-weight:bold; margin-bottom:15px; cursor:pointer;">
                 再読み込み
             </button>
-            
+
             <button onclick="importData()" style="width:230px; padding:16px; background:transparent; color:#fff; border:1px solid #fff; border-radius:12px; font-size:1.1rem; font-weight:bold; cursor:pointer;">
                 バックアップから復元
             </button>
 
-            <button onclick="if(confirm('データを消去して初期化しますか？')){ localStorage.removeItem(KEY); location.reload(); }" 
+            <button onclick="if(confirm('データを消去して初期化しますか？')){ localStorage.removeItem(KEY); location.reload(); }"
                     style="width:230px; padding:16px; background:transparent; color:#3f51b5; border:1px solid #3f51b5; border-radius:12px; font-size:1.1rem; font-weight:bold; cursor:pointer; margin-top:50px;">
                 初期化して復旧
             </button>
@@ -320,8 +324,8 @@ const showRecoveryUI = () => {
             Object.keys(latest).forEach(k => { if (appState[k] === undefined) appState[k] = latest[k]; });
             // ボタン配置の同期
             appState.buttonOrder = appState.buttonOrder.filter(b => latest.buttonOrder.includes(b));
-            latest.buttonOrder.forEach((b, idx) => { 
-                if (!appState.buttonOrder.includes(b)) appState.buttonOrder.splice(idx, 0, b); 
+            latest.buttonOrder.forEach((b, idx) => {
+                if (!appState.buttonOrder.includes(b)) appState.buttonOrder.splice(idx, 0, b);
             });
             // カラー配置の同期
             appState.colorOrder = appState.colorOrder.filter(c => latest.colorOrder.includes(c));
@@ -338,8 +342,8 @@ const showRecoveryUI = () => {
         function normalizeText(text) { if (!text) return ""; return String(text).replace(/[○〇]/g, "◯"); }
         function isLightOn(text) { if (!text) return false; const lastOpen = text.lastIndexOf('['); const lastClose = text.lastIndexOf(']'); return lastOpen > lastClose; }
 
-        // ポイント計算
-        function getPointInfo(text) {
+        // ポイント計算（color：'red'／'green'／'blue'。🔵だけ POINTS_BLUE で数える）
+        function getPointInfo(text, color) {
             const normalized = normalizeText(text);
             if (!normalized.trim()) return { pts: 0, isConsumed: false };
             const lines = normalized.split('\n').filter(l => l.trim() !== "");
@@ -360,13 +364,9 @@ const showRecoveryUI = () => {
                 textToCount = lastLine.substring(lastLine.lastIndexOf("＊") + 1);
             }
             let symPts = 0;
+            const table = (color === 'blue') ? POINTS_BLUE : POINTS;
             const cleanText = textToCount.replace(/\(\d+\)/g, "");
-            for (const char of cleanText) {
-                if (char === '◯') symPts += 1;
-                else if (['◎', '●', '☆'].includes(char)) symPts += 10;
-                else if (['★', '◇'].includes(char)) symPts += 20;
-                else if (char === '◆') symPts += 40;
-            }
+            for (const char of cleanText) symPts += table[char] || 0;
             return { pts: basePts + symPts, isConsumed: isConsumed };
         }
 
@@ -384,22 +384,22 @@ const showRecoveryUI = () => {
         }
 
         // 設定画面の開閉
-        function toggleSettingsModal() { 
+        function toggleSettingsModal() {
             const modal = document.getElementById('settings-modal');
-            modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex'; 
+            modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
         }
 
         // 設定の切り替え（保存処理付き）
-        function toggleTheme() { 
-            appState.isLightMode = document.getElementById('theme-toggle').checked; 
+        function toggleTheme() {
+            appState.isLightMode = document.getElementById('theme-toggle').checked;
             saveAndRefresh();
         }
-        function toggleFlashSetting() { 
-            appState.flashEnabled = document.getElementById('flash-toggle').checked; 
+        function toggleFlashSetting() {
+            appState.flashEnabled = document.getElementById('flash-toggle').checked;
             saveAndRefresh();
         }
-        function toggleAutoLightSetting() { 
-            appState.autoLightMode = document.getElementById('auto-light-toggle').checked; 
+        function toggleAutoLightSetting() {
+            appState.autoLightMode = document.getElementById('auto-light-toggle').checked;
             saveAndRefresh();
         }
 
@@ -408,24 +408,24 @@ const showRecoveryUI = () => {
             localStorage.setItem(KEY, JSON.stringify(appState));
             updateUI();
         }
-        
-        function toggleSortMode() { 
-            appState.isSortMode = !appState.isSortMode; 
-            sortTargetIdx = null; 
-            document.getElementById('settings-modal').style.display = 'none'; 
-            document.getElementById('sort-done-overlay').style.display = appState.isSortMode ? 'flex' : 'none'; 
+
+        function toggleSortMode() {
+            appState.isSortMode = !appState.isSortMode;
+            sortTargetIdx = null;
+            document.getElementById('settings-modal').style.display = 'none';
+            document.getElementById('sort-done-overlay').style.display = appState.isSortMode ? 'flex' : 'none';
             // 【追加】完了時に保存する
             if (!appState.isSortMode) {
                 localStorage.setItem(KEY, JSON.stringify(appState));
             }
-            updateUI(); 
+            updateUI();
         }
 
-        function resetToDefaultOrder() { 
-            if(!confirm('配置をデフォルトに戻しますか？')) return; 
-            appState.buttonOrder = ['◯', '◎', '●', '☆', '★', '◇', '◆', '＊', '🔔', '発光']; 
-            appState.colorOrder = ['red', 'green', 'blue']; 
-            updateUI(); 
+        function resetToDefaultOrder() {
+            if(!confirm('配置をデフォルトに戻しますか？')) return;
+            appState.buttonOrder = ['◯', '◎', '●', '☆', '★', '◇', '◆', '＊', '🔔', '発光'];
+            appState.colorOrder = ['red', 'green', 'blue'];
+            updateUI();
         }
 
         // ナビゲーション
@@ -442,14 +442,14 @@ const showRecoveryUI = () => {
             document.getElementById('theme-toggle').checked = appState.isLightMode;
             document.getElementById('flash-toggle').checked = appState.flashEnabled;
             document.getElementById('auto-light-toggle').checked = appState.autoLightMode;
-            
+
             const tabArea = document.getElementById('tabs');
             tabArea.innerHTML = appState.sets.map((_, i) => `
-                <div class="tab ${!isMemo && i === appState.activeSetIdx ? 'active' : ''}" 
-                     onmousedown="tabTimer=setTimeout(()=>{isLongPress=true;handleTabLongPress(${i})},800)" 
-                     onmouseup="clearTimeout(tabTimer)" 
-                     ontouchstart="tabTimer=setTimeout(()=>{isLongPress=true;handleTabLongPress(${i})},800)" 
-                     ontouchend="clearTimeout(tabTimer)" 
+                <div class="tab ${!isMemo && i === appState.activeSetIdx ? 'active' : ''}"
+                     onmousedown="tabTimer=setTimeout(()=>{isLongPress=true;handleTabLongPress(${i})},800)"
+                     onmouseup="clearTimeout(tabTimer)"
+                     ontouchstart="tabTimer=setTimeout(()=>{isLongPress=true;handleTabLongPress(${i})},800)"
+                     ontouchend="clearTimeout(tabTimer)"
                      onclick="switchSet(${i})">【${i + 1}】</div>
             `).join('') + `<div class="tab tab-memo ${isMemo ? 'active' : ''}" onclick="showMemo()">情報</div>`;
 
@@ -491,7 +491,7 @@ const showRecoveryUI = () => {
                     grid.appendChild(btn);
                 });
                 const act = document.getElementById('dynamic-actions');
-                act.innerHTML = (appState.activeColor === 'blue') 
+                act.innerHTML = (appState.activeColor === 'blue')
                     ? `<button class="dynamic-btn" onclick="doAction('dot')">周期</button><button class="dynamic-btn" onclick="doAction('paren')">G数</button><button class="undo-btn" onclick="doUndo()">戻る</button>`
                     : `<button class="dynamic-btn" onclick="doAction('dot')">CZ</button><button class="undo-btn" onclick="doUndo()">戻る</button>`;
                 const isL = (appState.subLayer !== 'history') || appState.isSortMode;
@@ -510,15 +510,15 @@ const showRecoveryUI = () => {
                 return;
             }
             const mark = appState.buttonOrder[idx]; const cur = appState.sets[appState.activeSetIdx]; const c = appState.activeColor;
-            if (mark === '＊') { 
+            if (mark === '＊') {
                 if (isLightOn(cur[c])) cur[c] += "]";
-                const info = getPointInfo(cur[c]); const num = (c === 'blue') ? getNextBlueNumber() : ""; 
+                const info = getPointInfo(cur[c], c); const num = (c === 'blue') ? getNextBlueNumber() : "";
                 const autoStart = appState.autoLightMode ? "[" : "";
-                cur[c] += "(" + info.pts + ")＊" + num + "\n" + autoStart; 
-                updateUI(); 
+                cur[c] += "(" + info.pts + ")＊" + num + "\n" + autoStart;
+                updateUI();
             } else if (mark === '発光') {
-                const on = isLightOn(cur[c]); cur[c] += on ? "]" : "["; updateUI(); 
-            } else { 
+                const on = isLightOn(cur[c]); cur[c] += on ? "]" : "["; updateUI();
+            } else {
                 cur[c] += mark;
                 if (appState.autoLightMode && ['◎', '●', '★', '◆'].includes(mark) && !isLightOn(cur[c])) {
                     cur[c] += "["; updateUI();
@@ -530,7 +530,7 @@ const showRecoveryUI = () => {
         function countSymbols(color) {
             let circle = 0, double = 0;
             appState.sets.forEach(s => {
-                let text = normalizeText(s[color]).replace(/\[[^\]]*(\]|(?=$))/g, ""); 
+                let text = normalizeText(s[color]).replace(/\[[^\]]*(\]|(?=$))/g, "");
                 circle += (text.match(/◯/g) || []).length;
                 double += (text.match(/◎/g) || []).length;
             });
@@ -555,38 +555,38 @@ const showRecoveryUI = () => {
         function saveExtraMemo(t) { appState.sets[appState.activeSetIdx][t] = document.getElementById(t + '-memo').value; localStorage.setItem(KEY, JSON.stringify(appState)); }
         function saveEdit(c) { appState.sets[appState.activeSetIdx][c] = document.getElementById('log-' + c).innerText; localStorage.setItem(KEY, JSON.stringify(appState)); updateUI(); }
 
-        function doAction(type) { triggerFlash(); const cur = appState.sets[appState.activeSetIdx]; const c = appState.activeColor; if (isLightOn(cur[c])) cur[c] += "]"; const info = getPointInfo(cur[c]); const num = (c === 'blue') ? getNextBlueNumber() : ""; cur[c] += (type === 'dot' ? "." : "(") + info.pts + (type === 'dot' ? "" : ")") + num + "\n"; updateUI(); }
+        function doAction(type) { triggerFlash(); const cur = appState.sets[appState.activeSetIdx]; const c = appState.activeColor; if (isLightOn(cur[c])) cur[c] += "]"; const info = getPointInfo(cur[c], c); const num = (c === 'blue') ? getNextBlueNumber() : ""; cur[c] += (type === 'dot' ? "." : "(") + info.pts + (type === 'dot' ? "" : ")") + num + "\n"; updateUI(); }
         function doUndo() { triggerFlash(); const cur = appState.sets[appState.activeSetIdx]; const txt = cur[appState.activeColor]; if (txt.length > 0) { cur[appState.activeColor] = txt.slice(0, -1); updateUI(); } }
         function getNextBlueNumber() { const txt = String(appState.sets[appState.activeSetIdx].blue || ""); let count = 0; circledNumbers.forEach(n => { if (txt.includes(n)) count++; }); return circledNumbers[count] || (count + 1); }
 
         // セット移動
         function goToNextSet() {
-            triggerFlash(); 
+            triggerFlash();
             if (!confirm('次セットに進みますか？')) return;
-            const cur = appState.sets[appState.activeSetIdx]; 
+            const cur = appState.sets[appState.activeSetIdx];
             const next = { red: "", green: "", blue: "", upper: "", lower: "" };
-            
+
             ['red', 'green', 'blue'].forEach(c => {
                 if (isLightOn(cur[c])) cur[c] += "]";
-                const txt = cur[c] || ""; 
+                const txt = cur[c] || "";
                 if (!txt.trim()) return;
-                
-                const info = getPointInfo(txt); 
-                const lines = txt.split('\n').filter(l => l.trim() !== ""); 
+
+                const info = getPointInfo(txt, c);
+                const lines = txt.split('\n').filter(l => l.trim() !== "");
                 const lastLine = lines[lines.length - 1] || "";
-                
+
                 // 行が数字や閉じカッコで終わっていない（＝ポイントが浮いている）状態をチェック
                 const isFinished = lastLine.match(/[\d\)]$/) || circledNumbers.some(cn => lastLine.endsWith(cn));
-                
-                if (info.pts > 0 && !info.isConsumed) { 
+
+                if (info.pts > 0 && !info.isConsumed) {
                     // 今のセットの末尾にポイントを書き込んでから改行
-                    if (!isFinished) cur[c] += "(" + info.pts + ")\n"; 
+                    if (!isFinished) cur[c] += "(" + info.pts + ")\n";
                     // 青以外は「→」で引き継ぎ
-                    if (c !== 'blue') next[c] = "(" + info.pts + ")→"; 
+                    if (c !== 'blue') next[c] = "(" + info.pts + ")→";
                 }
             });
-            appState.sets.push(next); 
-            appState.activeSetIdx = appState.sets.length - 1; 
+            appState.sets.push(next);
+            appState.activeSetIdx = appState.sets.length - 1;
             updateUI();
             setTimeout(() => { const ta = document.getElementById('tabs'); if (ta) ta.scrollLeft = ta.scrollWidth; }, 100);
         }
@@ -597,40 +597,40 @@ const showRecoveryUI = () => {
             let text = ""; // 最初に中身を空にする（重複防止）
             const r = countSymbols('red'), g = countSymbols('green'), b = countSymbols('blue');
             const bellProb = appState.bellCount > 0 && appState.totalGames > 0 ? `(1/${(appState.totalGames/appState.bellCount).toFixed(1)})` : "";
-            
+
             text = `【集計】\n総G数：${appState.totalGames}G\n🔔${appState.bellCount} ${bellProb}\n🔴${r.text}\n🟢${g.text}\n🔵${b.text}\n\n`;
-            
-            const processForCopy = (val) => {
+
+            const processForCopy = (val, color) => {
                 if (!val) return "";
                 let p = val.trim();
                 // 発光中（[ が開きっぱなし）なら ] を補完する
                 if (isLightOn(p)) p += "]";
-        
-                const info = getPointInfo(p); 
+
+                const info = getPointInfo(p, color);
                 const lines = p.split('\n');
                 const lastLine = lines[lines.length - 1] || "";
                 const isFinished = lastLine.match(/[\d\)]$/) || circledNumbers.some(cn => lastLine.endsWith(cn));
-                
+
                 if (info.pts > 0 && !info.isConsumed && !isFinished) {
                     return p + `(${info.pts})`;
                 }
                 return p;
             };
-            
+
             text += appState.sets.map((s, i) => {
                 let lines = [`【${i + 1}】`];
                 if (s.upper) lines.push(s.upper.trim() + "\n");
-                lines.push(`🔴${processForCopy(s.red)}`);
-                lines.push(`🟢${processForCopy(s.green)}`);
-                lines.push(`🔵${processForCopy(s.blue)}`);
+                lines.push(`🔴${processForCopy(s.red, 'red')}`);
+                lines.push(`🟢${processForCopy(s.green, 'green')}`);
+                lines.push(`🔵${processForCopy(s.blue, 'blue')}`);
                 if (s.lower) lines.push("\n" + s.lower.trim());
                 return lines.join('\n');
             }).join('\n\n');
-            
+
             if(appState.freeMemo) text += `\n\n【メモ】\n${appState.freeMemo}`;
-            
-            await navigator.clipboard.writeText(text); 
-            alert("コピー完了"); 
+
+            await navigator.clipboard.writeText(text);
+            alert("コピー完了");
         }
         function clearData() { if (confirm('データをリセットしますか？')) { appState.activeSetIdx = 0; appState.sets = [{ red: "", green: "", blue: "", upper: "", lower: "" }]; appState.bellCount = 0; appState.totalGames = 0; appState.freeMemo = ""; updateUI(); } }
         function closeSettings(e) { if(e.target.id === 'settings-modal') toggleSettingsModal(); }
@@ -650,9 +650,9 @@ const showRecoveryUI = () => {
                 const decoded = JSON.parse(decodeURIComponent(escape(atob(code))));
                 if (confirm("既存のデータを上書きして復元しますか？")) {
                     // 1. 保存
-                    localStorage.setItem(KEY, JSON.stringify(decoded)); 
-                    appState = decoded; 
-                    
+                    localStorage.setItem(KEY, JSON.stringify(decoded));
+                    appState = decoded;
+
                     if (document.getElementById('control-area')) {
                         // 2. 描画更新
                         updateUI();
@@ -665,8 +665,8 @@ const showRecoveryUI = () => {
                         window.location.reload();
                     }
                 }
-            } catch(e) { 
-                alert("コードが正しくありません。"); 
+            } catch(e) {
+                alert("コードが正しくありません。");
             }
         }
 
